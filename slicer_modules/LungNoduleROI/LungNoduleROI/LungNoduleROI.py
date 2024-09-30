@@ -77,7 +77,8 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.roiSizeSlider.value = 10
         self.ui.roiSizeSlider.connect('valueChanged(int)', self.onRoiSliderValueChanged)
 
-        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2} Slices Cubed')
+        self.ui.roiSizeLabel.connect('textChanged(QString)', self.userChangedRoiSize)
+        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value}')
 
         # Combobox
         self.ui.volumeComboBox.setMRMLScene(slicer.mrmlScene)
@@ -147,7 +148,10 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     def onRoiSliderValueChanged(self):
-        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2} Slices Cubed')
+        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2}')
+
+    def userChangedRoiSize(self):
+        self.ui.roiSizeSlider.value = int(self.ui.roiSizeLabel.text) / 2
 
 
     def onApplyButton(self):
@@ -206,6 +210,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         roi_img_volume = slicer.util.addVolumeFromArray(roi_img_np)
         roi_img_volume.SetName(self.ui.fileName.text)
+
         slicer.util.setSliceViewerLayers(background=roi_img_volume, fit=True)
         
     def onVolumeSelected(self):
