@@ -37,6 +37,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._updatingGUIFromParameterNode = False
         self.nodeList = []
         self.currentVolume = None
+        self.inSlices = False
 
     def setup(self):
         """
@@ -79,11 +80,14 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.ui.roiSizeLabel.connect('textChanged(QString)', self.userChangedRoiSize)
         self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value}')
+        self.ui.centroidManualButton.connect('clicked(bool)', self.onCentroidManualButton)
+
 
         # Combobox
         self.ui.volumeComboBox.setMRMLScene(slicer.mrmlScene)
         self.ui.volumeComboBox.connect('currentNodeChanged(vtkMRMLNode*)', self.onVolumeSelected)
         self.ui.volumeComboBox.renameEnabled = True
+
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -145,6 +149,16 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         fiducialNode.SetName('nodule_centroid')
 
         slicer.modules.markups.logic().StartPlaceMode(0)
+        self.inSlices = False
+
+    def onCentroidManualButton(self):
+        fiducialNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
+        fiducialNode.SetName('nodule_centroid')
+        img = self.ui.volumeComboBox.currentNode()
+        slices = [int(self.ui.sLineEdit.text), int(self.ui.cLineEdit.text), int(self.ui.aLineEdit.text)]
+        print(f'slices: {slices}')
+
+        self.inSlices = True
 
 
     def onRoiSliderValueChanged(self):
@@ -161,45 +175,48 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if volume is None:
             logging.error('No volume selected')
-            return
+            return  
 
         # Get the centroid of the nodule
         if node is None:
             logging.error('No centroid selected')
             return
-        
-        # Get the centroid of the nodule
-        centroid = [0, 0, 0]
-        node.GetNthFiducialPosition(0, centroid)
-        print(f'centroid: {centroid}')
+    
+        if not self.inSlices:
+            # Get the centroid of the nodule
+            centroid = [0, 0, 0]
+            node.GetNthFiducialPosition(0, centroid)
+            print(f'centroid: {centroid}')
 
-        # Get the origin and spacing of the volume
-        origin = volume.GetOrigin()
-        print(f'origin: {origin}')
-        spacing = volume.GetSpacing()
-        print(f'spacing: {spacing}')
+            # Get the origin and spacing of the volume
+            origin = volume.GetOrigin()
+            print(f'origin: {origin}')
+            spacing = volume.GetSpacing()
+            print(f'spacing: {spacing}')
 
-        difference_vector = np.subtract(centroid, origin)
-        print(f'difference xyz: {difference_vector}')
+            difference_vector = np.subtract(centroid, origin)
+            print(f'difference xyz: {difference_vector}')
 
-        difference_slices = np.divide(difference_vector, spacing)
-        difference_slices_int = []
+            difference_slices = np.divide(difference_vector, spacing)
+            difference_slices_int = []
 
-        # convert to int and take absolute value
-        for i in range(3):
-            slice = int(difference_slices[i])
-            if slice < 0:
-                slice = -1 * slice
-            difference_slices_int.append(slice)
+            # convert to int and take absolute value
+            for i in range(3):
+                slice = int(difference_slices[i])
+                if slice < 0:
+                    slice = -1 * slice
+                difference_slices_int.append(slice)
 
-        print(f'difference in slices: {difference_slices_int}')
+            print(f'difference in slices: {difference_slices_int}')
 
-        self.ui.centroidLabel.setText(difference_slices_int)
+            self.ui.centroidLabel.setText(difference_slices_int)
+        else:
+            difference_slices_int = [int(self.ui.sLineEdit.text), int(self.ui.cLineEdit.text), int(self.ui.aLineEdit.text)]
 
         # run image ROI class
         print()
         print('Creating image ROI...')
-        roi_img = self.create_roi(volume, difference_slices_int, self.ui.roiSizeSlider.value)
+        self.create_roi(volume, difference_slices_int, self.ui.roiSizeSlider.value)
 
     def create_roi(self, volume, centroid, size):
         print(f'Creating ROI with size {size * 2} and centroid {centroid}')
