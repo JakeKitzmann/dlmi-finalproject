@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>691</width>
-    <height>715</height>
+    <width>810</width>
+    <height>891</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -21,149 +21,221 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
-       <layout class="QGridLayout" name="gridLayout">
-        <item row="2" column="7">
-         <widget class="QLineEdit" name="roiSizeLabel">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>16777215</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QLabel" name="roiSizeLabelStatic">
-          <property name="text">
-           <string>ROI Size:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Volume:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="6" colspan="2">
-         <widget class="QLineEdit" name="fileName">
-          <property name="text">
-           <string>Output ROI</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3" colspan="4">
-         <widget class="qMRMLNodeComboBox" name="volumeComboBox">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="nodeTypes">
-           <stringlist>
-            <string>vtkMRMLScalarVolumeNode</string>
-           </stringlist>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="3" colspan="4">
-         <widget class="QSlider" name="roiSizeSlider">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="5">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Output Volume Name</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="5">
-         <widget class="QPushButton" name="noduleCentroidButton">
-          <property name="text">
-           <string>Place Nodule Centroid</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="5" colspan="3">
-         <widget class="QPushButton" name="applyButton">
-          <property name="text">
-           <string>Create ROI</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="5">
-         <widget class="QPushButton" name="centroidManualButton">
-          <property name="text">
-           <string>Enter Centroid Manually</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="6">
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QLineEdit" name="sLineEdit">
-            <property name="maximumSize">
-             <size>
-              <width>45</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Sagittal</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="cLineEdit">
-            <property name="maximumSize">
-             <size>
-              <width>45</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Coronal</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="aLineEdit">
-            <property name="maximumSize">
-             <size>
-              <width>45</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Axial</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="3" column="6">
-         <widget class="QLabel" name="centroidLabel">
-          <property name="text">
-           <string>Centroid Location...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="2">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
+       <widget class="ctkCollapsibleButton" name="CollapsibleButton_3">
+        <property name="text">
+         <string>Single Case</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="2" column="7">
+            <widget class="QLineEdit" name="roiSizeLabel">
+             <property name="maximumSize">
+              <size>
+               <width>100</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QLabel" name="roiSizeLabelStatic">
+             <property name="text">
+              <string>ROI Size:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Volume:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="6" colspan="2">
+            <widget class="QLineEdit" name="fileName">
+             <property name="text">
+              <string>Output ROI</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3" colspan="4">
+            <widget class="qMRMLNodeComboBox" name="volumeComboBox">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="nodeTypes">
+              <stringlist>
+               <string>vtkMRMLScalarVolumeNode</string>
+              </stringlist>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3" colspan="4">
+            <widget class="QSlider" name="roiSizeSlider">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="5">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Output Volume Name</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="5">
+            <widget class="QPushButton" name="noduleCentroidButton">
+             <property name="text">
+              <string>Place Nodule Centroid</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="5" colspan="3">
+            <widget class="QPushButton" name="applyButton">
+             <property name="text">
+              <string>Create Single ROI</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="5">
+            <widget class="QPushButton" name="centroidManualButton">
+             <property name="text">
+              <string>Enter Centroid Manually</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="6">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QLineEdit" name="sLineEdit">
+               <property name="maximumSize">
+                <size>
+                 <width>45</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Sagittal</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="cLineEdit">
+               <property name="maximumSize">
+                <size>
+                 <width>45</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Coronal</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="aLineEdit">
+               <property name="maximumSize">
+                <size>
+                 <width>45</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Axial</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="3" column="6">
+            <widget class="QLabel" name="centroidLabel">
+             <property name="text">
+              <string>Centroid Location...</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="ctkCollapsibleButton" name="CollapsibleButton_4">
+        <property name="text">
+         <string>Batch Processing</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <layout class="QGridLayout" name="gridLayout_8">
+           <item row="1" column="4">
+            <widget class="QLineEdit" name="lineEdit"/>
+           </item>
+           <item row="4" column="4" colspan="2">
+            <widget class="QPushButton" name="applyButton_2">
+             <property name="text">
+              <string>Create ROI Batch</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Path to Volumes</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="2" column="3">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Path to Centroids &amp; Sizes</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4">
+            <widget class="QLineEdit" name="lineEdit_2"/>
+           </item>
+           <item row="3" column="3">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Output Path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="4">
+            <widget class="QLineEdit" name="lineEdit_3"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
       </item>
      </layout>
     </widget>
