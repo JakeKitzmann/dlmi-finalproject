@@ -22,10 +22,48 @@
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="2" column="2">
+        <item row="6" column="5" colspan="3">
+         <widget class="QPushButton" name="applyButton">
+          <property name="text">
+           <string>Create ROI</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
          <widget class="QLabel" name="roiSizeLabelStatic">
           <property name="text">
            <string>ROI Size:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="6" colspan="2">
+         <widget class="QLineEdit" name="fileName">
+          <property name="text">
+           <string>Output ROI</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3" colspan="4">
+         <widget class="QSlider" name="roiSizeSlider">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="7">
+         <widget class="QLineEdit" name="roiSizeLabel">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="6" colspan="2">
+         <widget class="QLabel" name="centroidLabel">
+          <property name="text">
+           <string>Centroid Location...</string>
           </property>
          </widget>
         </item>
@@ -48,55 +86,17 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="5" colspan="3">
-         <widget class="QPushButton" name="applyButton">
-          <property name="text">
-           <string>Create ROI</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="5">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Output Volume Name</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="3" colspan="4">
-         <widget class="QSlider" name="roiSizeSlider">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="5">
+        <item row="2" column="5">
          <widget class="QPushButton" name="noduleCentroidButton">
           <property name="text">
            <string>Place Nodule Centroid</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="6" colspan="2">
-         <widget class="QLineEdit" name="fileName">
+        <item row="3" column="5">
+         <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Output ROI</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="6" colspan="2">
-         <widget class="QLabel" name="centroidLabel">
-          <property name="text">
-           <string>Centroid Location...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="7">
-         <widget class="QLineEdit" name="roiSizeLabel">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>16777215</height>
-           </size>
+           <string>Output Volume Name</string>
           </property>
          </widget>
         </item>
@@ -121,9 +121,6 @@
     <layout class="QGridLayout" name="gridLayout_2"/>
    </item>
    <item>
-    <widget class="qMRMLExpandingWebView" name="MRMLExpandingWebView"/>
-   </item>
-   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -146,11 +143,6 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>qMRMLExpandingWebView</class>
-   <extends>QWebEngineView</extends>
-   <header>qMRMLExpandingWebView.h</header>
-  </customwidget>
-  <customwidget>
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
@@ -165,11 +157,6 @@
    <class>qMRMLSegmentEditorWidget</class>
    <extends>qMRMLWidget</extends>
    <header>qMRMLSegmentEditorWidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QWebEngineView</class>
-   <extends></extends>
-   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
   </customwidget>
  </customwidgets>
  <resources/>
