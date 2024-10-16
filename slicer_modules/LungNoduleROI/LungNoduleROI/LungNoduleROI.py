@@ -73,21 +73,47 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.noduleCentroidButton.connect('clicked(bool)', self.onNoduleCentroidButton)
         self.ui.applyButton.connect('clicked(bool)', self.onApplyButton)
 
+        # Sliders
         self.ui.roiSizeSlider.minimum = 4
         self.ui.roiSizeSlider.maximum = 35
-        self.ui.roiSizeSlider.value = 10
+        self.ui.roiSizeSlider.value = 11
         self.ui.roiSizeSlider.connect('valueChanged(int)', self.onRoiSliderValueChanged)
 
         self.ui.roiSizeLabel.connect('textChanged(QString)', self.userChangedRoiSize)
         self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value}')
         self.ui.centroidManualButton.connect('clicked(bool)', self.onCentroidManualButton)
 
+        # non isotropic size sliders
 
+        nonIsoSliders = [self.ui.sSliderNonIso, self.ui.cSliderNonIso, self.ui.aSliderNonIso]
+
+        nonIsoSliders[0].connect('valueChanged(int)', self.sSliderNonIsoChanged)
+        nonIsoSliders[1].connect('valueChanged(int)', self.cSliderNonIsoChanged)
+        nonIsoSliders[2].connect('valueChanged(int)', self.aSliderNonIsoChanged)
+
+        for slider in nonIsoSliders:
+            slider.minimum = 4
+            slider.maximum = 35
+            slider.value = 11
+
+        # LineEdits non iso
+        self.ui.sLineEditNonIso.text = self.ui.sSliderNonIso.value
+        self.ui.cLineEditNonIso.text = self.ui.cSliderNonIso.value
+        self.ui.aLineEditNonIso.text = self.ui.aSliderNonIso.value
+
+        self.ui.aLineEditNonIso.connect('textChanged(QString)', self.aLineEditNonIsoChanged)
+        self.ui.cLineEditNonIso.connect('textChanged(QString)', self.cLineEditNonIsoChanged)
+        self.ui.sLineEditNonIso.connect('textChanged(QString)', self.sLineEditNonIsoChanged)
+
+        
         # Combobox
         self.ui.volumeComboBox.setMRMLScene(slicer.mrmlScene)
         self.ui.volumeComboBox.connect('currentNodeChanged(vtkMRMLNode*)', self.onVolumeSelected)
         self.ui.volumeComboBox.renameEnabled = True
 
+        # CheckBoxes
+        self.ui.roiCheckBox.connect('clicked(bool)', self.onRoiCheckBox)
+        self.onRoiCheckBox()
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -144,7 +170,45 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if firstVolumeNode:
                 self._parameterNode.SetNodeReferenceID("InputVolume", firstVolumeNode.GetID())
 
+    def aSliderNonIsoChanged(self):
+        self.ui.aLineEditNonIso.text = self.ui.aSliderNonIso.value * 2
+
+    def cSliderNonIsoChanged(self):
+        self.ui.cLineEditNonIso.text = self.ui.cSliderNonIso.value * 2
+
+    def sSliderNonIsoChanged(self):
+        self.ui.sLineEditNonIso.text = self.ui.sSliderNonIso.value * 2
+
+    def aLineEditNonIsoChanged(self):
+        self.ui.aSliderNonIso.value = (int(self.ui.aLineEditNonIso.text)) / 2
+
+    def cLineEditNonIsoChanged(self):
+        self.ui.cSliderNonIso.value = (int(self.ui.cLineEditNonIso.text)) / 2
+
+    def sLineEditNonIsoChanged(self):
+        self.ui.sSliderNonIso.value = (int(self.ui.sLineEditNonIso.text)) / 2
+    
+    def onRoiCheckBox(self):
+        gridLayoutComponents = [self.ui.sLabelNonIso, self.ui.sLineEditNonIso, self.ui.sSliderNonIso, self.ui.cLabelNonIso, self.ui.cLineEditNonIso, self.ui.cSliderNonIso, self.ui.aLabelNonIso, self.ui.aLineEditNonIso, self.ui.aSliderNonIso]
+        
+        if self.ui.roiCheckBox.isChecked():
+           for component in gridLayoutComponents:
+                component.setVisible(True)
+        else:
+            for component in gridLayoutComponents:
+                component.setVisible(False)
+
+
+    def clearNoduleCentroids(self):
+        nodeList = slicer.util.getNodesByClass('vtkMRMLMarkupsFiducialNode')
+        if len(nodeList) != 0:
+            for node in nodeList:
+                if node.GetName() == 'nodule_centroid':
+                    slicer.mrmlScene.RemoveNode(node)
+
     def onNoduleCentroidButton(self):
+        self.clearNoduleCentroids()
+
         fiducialNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
         fiducialNode.SetName('nodule_centroid')
 
@@ -152,6 +216,8 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.inSlices = False
 
     def onCentroidManualButton(self):
+        self.clearNoduleCentroids()
+
         fiducialNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
         fiducialNode.SetName('nodule_centroid')
         img = self.ui.volumeComboBox.currentNode()
@@ -162,10 +228,10 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     def onRoiSliderValueChanged(self):
-        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2}')
+        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2 }')
 
     def userChangedRoiSize(self):
-        self.ui.roiSizeSlider.value = int(self.ui.roiSizeLabel.text) / 2
+        self.ui.roiSizeSlider.value = (int(self.ui.roiSizeLabel.text) / 2)
 
 
     def onApplyButton(self):
@@ -177,7 +243,6 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             logging.error('No volume selected')
             return  
 
-        # Get the centroid of the nodule
         if node is None:
             logging.error('No centroid selected')
             return
@@ -209,26 +274,44 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             print(f'difference in slices: {difference_slices_int}')
 
-            self.ui.centroidLabel.setText(difference_slices_int)
+            self.ui.sLineEdit.text = str(difference_slices_int[0])
+            self.ui.cLineEdit.text = str(difference_slices_int[1])
+            self.ui.aLineEdit.text = str(difference_slices_int[2])
+
         else:
             difference_slices_int = [int(self.ui.sLineEdit.text), int(self.ui.cLineEdit.text), int(self.ui.aLineEdit.text)]
 
         # run image ROI class
         print()
         print('Creating image ROI...')
-        self.create_roi(volume, difference_slices_int, self.ui.roiSizeSlider.value)
-
-    def create_roi(self, volume, centroid, size):
-        print(f'Creating ROI with size {size * 2} and centroid {centroid}')
 
         sitk_img = sitkUtils.PullVolumeFromSlicer(volume.GetID())
         imageROI = ImageROI()
-        roi_img_np = imageROI.create_roi_image(sitk_img, size, centroid)
+
+        size = [0,0,0]
+
+        if self.ui.roiCheckBox.isChecked():
+            size[0] = int(self.ui.sLineEditNonIso.text)
+            size[1] = int(self.ui.cLineEditNonIso.text)
+            size[2] = int(self.ui.aLineEditNonIso.text)
+            print(f'Non-isotropic size: {size}')
+        else:
+            size = [self.ui.roiSizeSlider.value * 2, self.ui.roiSizeSlider.value * 2, self.ui.roiSizeSlider.value * 2 ]
+
+        print(f'Creating ROI with size {size} and centroid {difference_slices_int}')
+
+
+        roi_img_np = imageROI.create_roi_image(sitk_img, size, difference_slices_int)
 
         roi_img_volume = slicer.util.addVolumeFromArray(roi_img_np)
         roi_img_volume.SetName(self.ui.fileName.text)
 
+        if not self.ui.interpolationCheckBox.isChecked():
+            roi_img_display_node = roi_img_volume.GetDisplayNode()
+            roi_img_display_node.SetInterpolate(0)
+
         slicer.util.setSliceViewerLayers(background=roi_img_volume, fit=True)
+
         
     def onVolumeSelected(self):
         print('Volume selected')
@@ -284,10 +367,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             return
     
 
-        wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
-
-        nodes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
-        
+        wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch        
 
         self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.volumeComboBox.currentNodeID)
 
@@ -340,21 +420,6 @@ class ImageROI:
     def __init__(self):
         print("ImageROI object created")
 
-    # convert coordinates from slicer spacing to sitk spacing
-    # inputs:
-    # img -> SimpleITK image
-    # slicer_size -> size from slicer resampling, found in volume metadata in slicer
-    # slicer_coords -> (x,y,z) coordinates of point in slicer
-    def convert_slicer_coordinates(self, img, slicer_size, slicer_coords):
-        size_conversion = np.divide(img.GetSize(), slicer_size)
-        python_coords_dbl = np.multiply(slicer_coords, size_conversion)
-        
-        python_coords = []
-        for coord in python_coords_dbl:
-            python_coords.append(int(coord))
-        
-        return python_coords
-
     # create roi image from sitk image
     # inputs:
     # img -> SimpleITK image
@@ -362,44 +427,19 @@ class ImageROI:
     # expansion -> amount to expand ROI from centroid in +/- for each direction
     def create_roi_image(self, img, expansion, centroid):
         # expand roi from centroid
+        print(f'exapansion: {expansion}')
         roi = {
-            'coronal' : [centroid[0]-expansion, centroid[0]+expansion],
-            'sagittal' : [centroid[1]-expansion, centroid[1]+expansion],
-            'axial' : [centroid[2]-expansion, centroid[2]+expansion]
+            'coronal' : [centroid[1]-int((expansion[1]) / 2), centroid[1]+int((expansion[1]) / 2)],
+            'sagittal' : [centroid[0]-int((expansion[0]) / 2), centroid[0]+int((expansion[0]) / 2)],
+            'axial' : [centroid[2]-int((expansion[2])/ 2), centroid[2]+int((expansion[2]) / 2)]
         }
 
         # convert to numpy array and cut down to roi around nodule centroid
         np_img = sitk.GetArrayFromImage(img)
         np_roi = np_img[roi['axial'][0]:roi['axial'][1],
-                        roi['sagittal'][0]:roi['sagittal'][1],
-                        roi['coronal'][0]:roi['coronal'][1]]
+                        roi['coronal'][0]:roi['coronal'][1],
+                        roi['sagittal'][0]:roi['sagittal'][1]]
 
         # return a SimpleITK image bounded in ROI
-        print('ROI shape:', np_roi.shape)
+        print('ROI shape:', np_roi.shape, '(axial, coronal, sagittal)')
         return np_roi
-
-    # basic function for resampling an image assuming dcm is already identity matrix
-    # inputs:
-    # img -> SimpleITK image to be resampled
-    def resample_image(self, img, spacing):
-        resample = sitk.ResampleImageFilter()
-
-        k = np.divide([1,1,1], img.GetSpacing())
-        
-        resample_size_float = np.divide(img.GetSize(), k)
-        resample_spacing_float = np.multiply(img.GetSpacing(), k)
-        
-        resample_size = []
-        resample_spacing = spacing
-        
-        for idx, dim in enumerate(resample_size_float):
-            resample_size.append(int(dim))
-        
-        resample = sitk.ResampleImageFilter()
-        resample.SetOutputOrigin(img.GetOrigin())
-        resample.SetSize(resample_size)
-        resample.SetOutputSpacing(resample_spacing)
-        resample.SetOutputDirection(img.GetDirection())
-        resample.SetInterpolator(sitk.sitkLinear)
-        
-        return resample.Execute(img)
