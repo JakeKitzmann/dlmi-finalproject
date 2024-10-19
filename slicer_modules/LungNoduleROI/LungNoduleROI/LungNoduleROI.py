@@ -21,6 +21,7 @@ class LungNoduleROI(ScriptedLoadableModule):
         self.parent.categories = ["Deep Learning Lung Nodule Segmentation"] 
         self.parent.dependencies = [] 
         self.parent.contributors = ["Jake Kitzmann (Advanced Pulmonary Physiomic Imaging Laboratory -- University of Iowa Roy J. and Lucille H. Carver College of Medicine)"]
+
         self.parent.helpText = ""
         self.parent.acknowledgementText = ""
 
@@ -103,7 +104,8 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.cLineEditNonIso.connect('textChanged(QString)', self.cLineEditNonIsoChanged)
         self.ui.sLineEditNonIso.connect('textChanged(QString)', self.sLineEditNonIsoChanged)
 
-        
+                self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2} Slices Cubed')
+
         # Combobox
         self.ui.volumeComboBox.setMRMLScene(slicer.mrmlScene)
         self.ui.volumeComboBox.connect('currentNodeChanged(vtkMRMLNode*)', self.onVolumeSelected)
@@ -121,6 +123,10 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.onSingleCaseRadioButton()        
         self.ui.singleCaseRadioButton.connect('clicked(bool)', self.onSingleCaseRadioButton)
         self.ui.batchCaseRadioButton.connect('clicked(bool)', self.onBatchCaseRadioButton)
+
+        # Make sure parameter node is initialized (needed for module reload)
+        self.initializeParameterNode()
+
 
     def cleanup(self):
         """
@@ -172,21 +178,6 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if firstVolumeNode:
                 self._parameterNode.SetNodeReferenceID("InputVolume", firstVolumeNode.GetID())
 
-    def recursivelyFindChildren(self, parent, boolean):
-        print(parent)
-        children = parent.childNodes()
-
-        # leaf node
-        if len(children) == 0:
-            return
-        
-        # run for rest of children
-        for child in children:
-            try:
-                child.setVisible(boolean)
-            except:
-                self.recursivelyFindChildren(child, boolean)
-
     def onSingleCaseRadioButton(self):
         self.ui.batchCase.setVisible(False)
         self.ui.singleCase.setVisible(True)
@@ -234,11 +225,11 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onNoduleCentroidButton(self):
         self.clearNoduleCentroids()
 
+    def onNoduleCentroidButton(self):
         fiducialNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
         fiducialNode.SetName('nodule_centroid')
 
-        slicer.modules.markups.logic().StartPlaceMode(0)
-        self.inSlices = False
+        slicer.modules.markups.logic().StartPlaceMode(0)        self.inSlices = False
 
     def onCentroidManualButton(self):
         self.clearNoduleCentroids()
@@ -257,6 +248,10 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def userChangedRoiSize(self):
         self.ui.roiSizeSlider.value = (int(self.ui.roiSizeLabel.text) / 2)
+
+
+    def onRoiSliderValueChanged(self):
+        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2} Slices Cubed')
 
 
     def onApplyButton(self):
@@ -305,11 +300,44 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         else:
             difference_slices_int = [int(self.ui.sLineEdit.text), int(self.ui.cLineEdit.text), int(self.ui.aLineEdit.text)]
+            return
+
+        # Get the centroid of the nodule
+        if node is None:
+            logging.error('No centroid selected')
+            return
+        
+        # Get the centroid of the nodule
+        centroid = [0, 0, 0]
+        node.GetNthFiducialPosition(0, centroid)
+        print(f'centroid: {centroid}')
+
+        # Get the origin and spacing of the volume
+        origin = volume.GetOrigin()
+        print(f'origin: {origin}')
+        spacing = volume.GetSpacing()
+        print(f'spacing: {spacing}')
+
+        difference_vector = np.subtract(centroid, origin)
+        print(f'difference xyz: {difference_vector}')
+
+        difference_slices = np.divide(difference_vector, spacing)
+        difference_slices_int = []
+
+        # convert to int and take absolute value
+        for i in range(3):
+            slice = int(difference_slices[i])
+            if slice < 0:
+                slice = -1 * slice
+            difference_slices_int.append(slice)
+
+        print(f'difference in slices: {difference_slices_int}')
+
+        self.ui.centroidLabel.setText(difference_slices_int)
 
         # run image ROI class
         print()
         print('Creating image ROI...')
-
         sitk_img = sitkUtils.PullVolumeFromSlicer(volume.GetID())
         imageROI = ImageROI()
 
@@ -337,6 +365,18 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         slicer.util.setSliceViewerLayers(background=roi_img_volume, fit=True)
 
+        roi_img = self.create_roi(volume, difference_slices_int, self.ui.roiSizeSlider.value)
+
+    def create_roi(self, volume, centroid, size):
+        print(f'Creating ROI with size {size * 2} and centroid {centroid}')
+
+        sitk_img = sitkUtils.PullVolumeFromSlicer(volume.GetID())
+        imageROI = ImageROI()
+        roi_img_np = imageROI.create_roi_image(sitk_img, size, centroid)
+
+        roi_img_volume = slicer.util.addVolumeFromArray(roi_img_np)
+        roi_img_volume.SetName(self.ui.fileName.text)
+        slicer.util.setSliceViewerLayers(background=roi_img_volume, fit=True)
         
     def onVolumeSelected(self):
         print('Volume selected')
@@ -394,6 +434,8 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch        
 
+        nodes = slicer.util.getNodesByClass("vtkMRMLScalarVolumeNode")
+        
         self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.volumeComboBox.currentNodeID)
 
 
@@ -444,7 +486,6 @@ class LungNoduleROITest(ScriptedLoadableModuleTest):
 class ImageROI:
     def __init__(self):
         print("ImageROI object created")
-
     # create roi image from sitk image
     # inputs:
     # img -> SimpleITK image
@@ -457,6 +498,7 @@ class ImageROI:
             'coronal' : [centroid[1]-int((expansion[1]) / 2), centroid[1]+int((expansion[1]) / 2)],
             'sagittal' : [centroid[0]-int((expansion[0]) / 2), centroid[0]+int((expansion[0]) / 2)],
             'axial' : [centroid[2]-int((expansion[2])/ 2), centroid[2]+int((expansion[2]) / 2)]
+
         }
 
         # convert to numpy array and cut down to roi around nodule centroid
@@ -467,4 +509,5 @@ class ImageROI:
 
         # return a SimpleITK image bounded in ROI
         print('ROI shape:', np_roi.shape, '(axial, coronal, sagittal)')
+     
         return np_roi

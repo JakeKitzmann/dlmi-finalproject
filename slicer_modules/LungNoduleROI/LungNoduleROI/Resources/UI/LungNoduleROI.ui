@@ -369,7 +369,7 @@
      </layout>
     </widget>
    </item>
-   <item>
+   <item>   
     <widget class="ctkCollapsibleButton" name="CollapsibleButton_2">
      <property name="text">
       <string>Nodule Segmentation</string>
@@ -379,6 +379,7 @@
        <widget class="qMRMLSegmentEditorWidget" name="SegmentEditorWidget"/>
       </item>
      </layout>
+
     </widget>
    </item>
    <item>
