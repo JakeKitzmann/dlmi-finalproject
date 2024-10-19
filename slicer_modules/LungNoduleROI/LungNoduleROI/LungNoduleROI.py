@@ -20,7 +20,7 @@ class LungNoduleROI(ScriptedLoadableModule):
         self.parent.title = "Lung Nodule ROI"  
         self.parent.categories = ["Deep Learning Lung Nodule Segmentation"] 
         self.parent.dependencies = [] 
-        self.parent.contributors = ["Jake Kitzmann (Advanced Pulmonary Physiomic Imaging Laboratory -- Carver College of Medicine)"]
+        self.parent.contributors = ["Jake Kitzmann (Advanced Pulmonary Physiomic Imaging Laboratory -- University of Iowa Roy J. and Lucille H. Carver College of Medicine)"]
         self.parent.helpText = ""
         self.parent.acknowledgementText = ""
 
@@ -65,8 +65,6 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # These connections ensure that we update parameter node when scene is closed
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
-        
-
 
         # Buttons
         # self.ui.applyButton.connect('clicked(bool)', self.onApplyButton)
@@ -76,7 +74,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Sliders
         self.ui.roiSizeSlider.minimum = 4
         self.ui.roiSizeSlider.maximum = 35
-        self.ui.roiSizeSlider.value = 11
+        self.ui.roiSizeSlider.value = 10
         self.ui.roiSizeSlider.connect('valueChanged(int)', self.onRoiSliderValueChanged)
 
         self.ui.roiSizeLabel.connect('textChanged(QString)', self.userChangedRoiSize)
@@ -94,7 +92,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         for slider in nonIsoSliders:
             slider.minimum = 4
             slider.maximum = 35
-            slider.value = 11
+            slider.value = 10
 
         # LineEdits non iso
         self.ui.sLineEditNonIso.text = self.ui.sSliderNonIso.value
@@ -118,7 +116,11 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
-        # variables for roi creation
+        # Radio Buttons
+        self.ui.singleCaseRadioButton.setChecked(True)
+        self.onSingleCaseRadioButton()        
+        self.ui.singleCaseRadioButton.connect('clicked(bool)', self.onSingleCaseRadioButton)
+        self.ui.batchCaseRadioButton.connect('clicked(bool)', self.onBatchCaseRadioButton)
 
     def cleanup(self):
         """
@@ -169,6 +171,29 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
             if firstVolumeNode:
                 self._parameterNode.SetNodeReferenceID("InputVolume", firstVolumeNode.GetID())
+
+    def recursivelyFindChildren(self, parent, boolean):
+        print(parent)
+        children = parent.childNodes()
+
+        # leaf node
+        if len(children) == 0:
+            return
+        
+        # run for rest of children
+        for child in children:
+            try:
+                child.setVisible(boolean)
+            except:
+                self.recursivelyFindChildren(child, boolean)
+
+    def onSingleCaseRadioButton(self):
+        self.ui.batchCase.setVisible(False)
+        self.ui.singleCase.setVisible(True)
+
+    def onBatchCaseRadioButton(self):
+        self.ui.singleCase.setVisible(False)
+        self.ui.batchCase.setVisible(True)
 
     def aSliderNonIsoChanged(self):
         self.ui.aLineEditNonIso.text = self.ui.aSliderNonIso.value * 2
