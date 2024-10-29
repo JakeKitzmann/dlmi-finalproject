@@ -11,6 +11,9 @@ import numpy as np
 import SimpleITK as sitk
 import sitkUtils
 
+import glob
+import csv
+
 
 
 class LungNoduleROI(ScriptedLoadableModule):
@@ -71,6 +74,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # self.ui.applyButton.connect('clicked(bool)', self.onApplyButton)
         self.ui.noduleCentroidButton.connect('clicked(bool)', self.onNoduleCentroidButton)
         self.ui.applyButton.connect('clicked(bool)', self.onApplyButton)
+        self.ui.batchCaseApplyButton.connect('clicked(bool)', self.onBatchCaseApplyButton)
 
         # Sliders
         self.ui.roiSizeSlider.minimum = 4
@@ -104,7 +108,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.cLineEditNonIso.connect('textChanged(QString)', self.cLineEditNonIsoChanged)
         self.ui.sLineEditNonIso.connect('textChanged(QString)', self.sLineEditNonIsoChanged)
 
-                self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2} Slices Cubed')
+        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2}')
 
         # Combobox
         self.ui.volumeComboBox.setMRMLScene(slicer.mrmlScene)
@@ -229,7 +233,8 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         fiducialNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsFiducialNode')
         fiducialNode.SetName('nodule_centroid')
 
-        slicer.modules.markups.logic().StartPlaceMode(0)        self.inSlices = False
+        slicer.modules.markups.logic().StartPlaceMode(0)        
+        self.inSlices = False
 
     def onCentroidManualButton(self):
         self.clearNoduleCentroids()
@@ -251,7 +256,7 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
 
     def onRoiSliderValueChanged(self):
-        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2} Slices Cubed')
+        self.ui.roiSizeLabel.setText(f'{self.ui.roiSizeSlider.value * 2}')
 
 
     def onApplyButton(self):
@@ -333,14 +338,6 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         print(f'difference in slices: {difference_slices_int}')
 
-        self.ui.centroidLabel.setText(difference_slices_int)
-
-        # run image ROI class
-        print()
-        print('Creating image ROI...')
-        sitk_img = sitkUtils.PullVolumeFromSlicer(volume.GetID())
-        imageROI = ImageROI()
-
         size = [0,0,0]
 
         if self.ui.roiCheckBox.isChecked():
@@ -350,11 +347,20 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             print(f'Non-isotropic size: {size}')
         else:
             size = [self.ui.roiSizeSlider.value * 2, self.ui.roiSizeSlider.value * 2, self.ui.roiSizeSlider.value * 2 ]
+            print(f'Isotropic size: {size}')
 
-        print(f'Creating ROI with size {size} and centroid {difference_slices_int}')
+        # create roi
+        self.create_roi(volume, difference_slices_int, size)
+
+    def create_roi(self, volume, centroid, size):
+
+        sitk_img = sitkUtils.PullVolumeFromSlicer(volume.GetID())
+        imageROI = ImageROI()
+
+        print(f'Creating ROI with size {size} and centroid {centroid}')
 
 
-        roi_img_np = imageROI.create_roi_image(sitk_img, size, difference_slices_int)
+        roi_img_np = imageROI.create_roi_image(sitk_img, size, centroid)
 
         roi_img_volume = slicer.util.addVolumeFromArray(roi_img_np)
         roi_img_volume.SetName(self.ui.fileName.text)
@@ -364,23 +370,68 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             roi_img_display_node.SetInterpolate(0)
 
         slicer.util.setSliceViewerLayers(background=roi_img_volume, fit=True)
+        print('ROI created')
 
-        roi_img = self.create_roi(volume, difference_slices_int, self.ui.roiSizeSlider.value)
+        return roi_img_volume
 
-    def create_roi(self, volume, centroid, size):
-        print(f'Creating ROI with size {size * 2} and centroid {centroid}')
-
-        sitk_img = sitkUtils.PullVolumeFromSlicer(volume.GetID())
-        imageROI = ImageROI()
-        roi_img_np = imageROI.create_roi_image(sitk_img, size, centroid)
-
-        roi_img_volume = slicer.util.addVolumeFromArray(roi_img_np)
-        roi_img_volume.SetName(self.ui.fileName.text)
-        slicer.util.setSliceViewerLayers(background=roi_img_volume, fit=True)
-        
     def onVolumeSelected(self):
-        print('Volume selected')
         self.currentVolume = self.ui.volumeComboBox.currentNode()
+
+    # BATCH CASES
+
+    def onBatchCaseApplyButton(self):
+        volumeListPath = self.ui.batchVolumeLineEdit.text
+        centroidListPath = self.ui.batchCentroidLineEdit.text
+        outputDir = self.ui.batchOutputLineEdit.text
+
+
+        volumePaths = os.listdir(volumeListPath)
+
+        cases = []
+
+        with open(centroidListPath) as file_obj: 
+            reader_obj = csv.reader(file_obj)
+            rows = []
+            for row in reader_obj:
+                print(row)
+                rows.append(row)
+
+        # create pairs of volumes and centroids for each case
+        for volumePath in volumePaths:
+            print('-----------------' + volumePath)
+            pid = volumePath.split('/')[-1].split('_')[0]
+
+            for row in rows:
+                if pid == row[0]:
+                    print('match')
+                    cases.append(self.case(volumeListPath + volumePath, row[0], row[1], row[2], row[3], row[4]))
+
+
+
+        for case in cases:
+            volume = slicer.util.loadVolume(case.volumePath)
+            centroid = [int(case.centroidS), int(case.centroidC), int(case.centroidA)]
+            size = [int(case.size), int(case.size), int(case.size)]
+
+            roi = self.create_roi(volume, centroid, size)
+
+            success = slicer.util.saveNode(roi, outputDir + '/' + case.PID + '_roi.nrrd')
+            if success:
+                print(f'Volume {case.PID} saved to {outputDir}')
+            else:
+                print(f'Failed to save volume {case.PID} to {outputDir}')
+               
+    
+
+    # class to store case information in batch processing
+    class case:
+        def __init__(self,volumePath, PID, centroidS, centroidC, centroidA, size):
+            self.volumePath = volumePath
+            self.PID = PID
+            self.centroidS = centroidS
+            self.centroidC = centroidC
+            self.centroidA = centroidA
+            self.size = size
 
 
     def setParameterNode(self, inputParameterNode):
@@ -442,7 +493,6 @@ class LungNoduleROIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
  
         self._parameterNode.EndModify(wasModified)
 
-
 class LungNoduleROILogic(ScriptedLoadableModuleLogic):
 
     def __init__(self):
@@ -493,7 +543,6 @@ class ImageROI:
     # expansion -> amount to expand ROI from centroid in +/- for each direction
     def create_roi_image(self, img, expansion, centroid):
         # expand roi from centroid
-        print(f'exapansion: {expansion}')
         roi = {
             'coronal' : [centroid[1]-int((expansion[1]) / 2), centroid[1]+int((expansion[1]) / 2)],
             'sagittal' : [centroid[0]-int((expansion[0]) / 2), centroid[0]+int((expansion[0]) / 2)],
@@ -507,7 +556,4 @@ class ImageROI:
                         roi['coronal'][0]:roi['coronal'][1],
                         roi['sagittal'][0]:roi['sagittal'][1]]
 
-        # return a SimpleITK image bounded in ROI
-        print('ROI shape:', np_roi.shape, '(axial, coronal, sagittal)')
-     
         return np_roi

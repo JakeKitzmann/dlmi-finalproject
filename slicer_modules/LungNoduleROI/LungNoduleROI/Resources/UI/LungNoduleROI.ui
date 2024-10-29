@@ -314,14 +314,14 @@
        <widget class="QWidget" name="batchCase" native="true">
         <layout class="QGridLayout" name="batchCaseGroupBox">
          <item row="4" column="4" colspan="2">
-          <widget class="QPushButton" name="applyButton_2">
+          <widget class="QPushButton" name="batchCaseApplyButton">
            <property name="text">
             <string>Create ROI Batch</string>
            </property>
           </widget>
          </item>
          <item row="3" column="4">
-          <widget class="QLineEdit" name="lineEdit_3"/>
+          <widget class="QLineEdit" name="batchOutputLineEdit"/>
          </item>
          <item row="3" column="3">
           <widget class="QLabel" name="label_5">
@@ -331,7 +331,7 @@
           </widget>
          </item>
          <item row="2" column="4">
-          <widget class="QLineEdit" name="lineEdit_2"/>
+          <widget class="QLineEdit" name="batchCentroidLineEdit"/>
          </item>
          <item row="1" column="3">
           <widget class="QLabel" name="label_3">
@@ -361,7 +361,7 @@
           </spacer>
          </item>
          <item row="1" column="4">
-          <widget class="QLineEdit" name="lineEdit"/>
+          <widget class="QLineEdit" name="batchVolumeLineEdit"/>
          </item>
         </layout>
        </widget>
@@ -369,7 +369,7 @@
      </layout>
     </widget>
    </item>
-   <item>   
+   <item>
     <widget class="ctkCollapsibleButton" name="CollapsibleButton_2">
      <property name="text">
       <string>Nodule Segmentation</string>
@@ -379,7 +379,6 @@
        <widget class="qMRMLSegmentEditorWidget" name="SegmentEditorWidget"/>
       </item>
      </layout>
-
     </widget>
    </item>
    <item>
